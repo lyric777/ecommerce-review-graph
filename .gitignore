@@ -1,0 +1,67 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+out/
+lib/
+*.tsbuildinfo
+
+# TypeScript
+*.d.ts
+
+# Runtime data
+.pids
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+.yarn-integrity
+
+# Dependency directories
+.pnp/
+.pnp.js
+
+# Testing
+/coverage
+/.nyc_output
+
+# VSCode
+.vscode/
+
+# IDEs
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Parcel, Next, Vercel, etc.
+.cache/
+.next/
+.vercel/
+.parcel-cache/
+
+# Misc
+*.tgz
+*.log
+npm-debug.log
+coverage/
