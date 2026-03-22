@@ -15,4 +15,9 @@ export const ReviewGraphState = Annotation.Root({
   finalStatus: Annotation<"approved" | "rejected" | "pending_review">(),
   autoFlag: Annotation<string | null>(),
   inferredScore: Annotation<number | null>(),
+  afterSalesDraft: Annotation<{
+        summary: string;
+        solution: string;
+        script: string;
+    } | null>(),
 });

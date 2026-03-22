@@ -1,5 +1,10 @@
 import { StateGraph, END, START } from "@langchain/langgraph";
 import { ReviewGraphState } from "./state.js";
+import { textWorkerNode } from "./nodes/textWorker.js";
+import { visionWorkerNode } from "./nodes/visionWorker.js";
+import { imputationWorkerNode } from "./nodes/imputationWorker.js";
+//import { supervisorNode } from "./nodes/supervisor.js";
+//import { finalDecisionNode } from "./nodes/finalDecision.js";
 
 // This is a highly simplified dummy node used only to demonstrate the skeleton
 const supervisorNode = async (state: typeof ReviewGraphState.State) => {
@@ -8,24 +13,44 @@ const supervisorNode = async (state: typeof ReviewGraphState.State) => {
     return { reasoningLogs: ["Supervisor initiated routing."] };
 };
 
-const textWorkerNode = async (state: typeof ReviewGraphState.State) => {
-    console.log("Text Worker: analyzing text...");
-    return { 
-        reasoningLogs: ["Text Worker: No mismatch found."],
-        finalStatus: "approved" 
-    };
+const finalDecisionNode = async (state: typeof ReviewGraphState.State) => {
+    console.log("Final Decision: aggregating all worker results...");
+    return { finalStatus: "approved" };
 };
 
-// 1. Initialize the Graph
+const routeAfterSupervisor = (state: typeof ReviewGraphState.State): string[] => {
+    const payload = state.reviewPayload;
+    // Text worker is ALWAYS required
+    const nextNodes = ["textWorker"]; 
+    // Conditionally add other workers based on payload
+    if (payload?.imageUrl) {
+        nextNodes.push("visionWorker");
+    }
+    if (payload?.rating === undefined || payload?.rating === null) {
+        nextNodes.push("imputationWorker");
+    }
+    console.log(`Supervisor routing to: [${nextNodes.join(", ")}]`);
+    return nextNodes;
+};
+
 const workflow = new StateGraph(ReviewGraphState)
     .addNode("supervisor", supervisorNode)
     .addNode("textWorker", textWorkerNode)
+    .addNode("visionWorker", visionWorkerNode)
+    .addNode("imputationWorker", imputationWorkerNode)
+    .addNode("finalDecision", finalDecisionNode)
     
-    // 2. Define edges (transitions)
+    // 4. Define edges (transitions)
     .addEdge(START, "supervisor")
-    // This may become a conditional edge later; currently a linear flow for demo purposes
-    .addEdge("supervisor", "textWorker")
-    .addEdge("textWorker", END);
+    
+    // Dynamic parallel branching
+    .addConditionalEdges("supervisor", routeAfterSupervisor)
+    
+    // Fan-in: All executed workers must converge to the final decision node
+    .addEdge("textWorker", "finalDecision")
+    .addEdge("visionWorker", "finalDecision")
+    .addEdge("imputationWorker", "finalDecision")
+    
+    .addEdge("finalDecision", END)
 
-// 3. Compile and export the executable Graph
 export const reviewModerationGraph = workflow.compile();
